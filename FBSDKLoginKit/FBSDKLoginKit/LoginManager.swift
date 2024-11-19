@@ -644,7 +644,30 @@ public final class LoginManager: NSObject {
 
   private typealias BrowserLoginSuccessBlock = (_ didOpen: Bool, _ error: Error?) -> Void
 
+  private func clearWebViewCookies() {
+    // Xóa tất cả cookies
+    if let cookies = HTTPCookieStorage.shared.cookies {
+        for cookie in cookies {
+            HTTPCookieStorage.shared.deleteCookie(cookie)
+        }
+    }
+    
+    // Xóa tất cả website data
+    if #available(iOS 9.0, *) {
+        let dataTypes = Set([WKWebsiteDataTypeCookies, WKWebsiteDataTypeLocalStorage])
+        let date = Date(timeIntervalSince1970: 0)
+        WKWebsiteDataStore.default().removeData(
+            ofTypes: dataTypes,
+            modifiedSince: date,
+            completionHandler: {}
+        )
+    }
+}
+
   private func performBrowserLogIn(handler browserLoginHandler: BrowserLoginSuccessBlock?) {
+      // Clear cookies first
+    clearWebViewCookies()
+    
     guard let dependencies = try? getDependencies() else { return }
 
     // swiftformat:disable:next redundantSelf
